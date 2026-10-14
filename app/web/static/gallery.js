@@ -21,8 +21,11 @@ let selectedIndex = -1;
 let viewerOpener = null;
 
 function makeCard(item, index) {
-  const card = document.createElement("article");
+  const card = document.createElement("button");
   card.className = "media-card";
+  card.type = "button";
+  card.setAttribute("aria-label", `Open ${item.name}`);
+  card.addEventListener("click", () => openViewer(index, preview));
 
   const preview = document.createElement(item.kind === "video" ? "video" : "img");
   preview.className = "media-preview";
@@ -34,15 +37,8 @@ function makeCard(item, index) {
     preview.loading = "lazy";
     preview.decoding = "async";
     preview.alt = item.name;
-
-    const previewButton = document.createElement("button");
-    previewButton.className = "media-preview-button";
-    previewButton.type = "button";
-    previewButton.setAttribute("aria-label", `Open ${item.name}`);
-    previewButton.addEventListener("click", () => openViewer(index, previewButton));
-    previewButton.append(preview);
-    card.append(previewButton);
   }
+  card.append(preview);
   preview.src = item.url;
 
   if (item.kind === "video") {
