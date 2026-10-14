@@ -26,30 +26,34 @@ function makeCard(item, index) {
 
   const preview = document.createElement(item.kind === "video" ? "video" : "img");
   preview.className = "media-preview";
-  if (item.kind === "video") {
-    preview.controls = true;
-    preview.preload = "none";
-    preview.playsInline = true;
-  } else {
-    preview.loading = "lazy";
-    preview.decoding = "async";
-    preview.alt = item.name;
-
-    const previewButton = document.createElement("button");
-    previewButton.className = "media-preview-button";
-    previewButton.type = "button";
-    previewButton.setAttribute("aria-label", `Open ${item.name}`);
-    previewButton.addEventListener("click", () => openViewer(index, previewButton));
-    previewButton.append(preview);
-    card.append(previewButton);
-  }
   preview.src = item.url;
 
   if (item.kind === "video") {
-    card.append(preview);
+    setVideoSettings(preview);
+  } else {
+    setImageSettings(preview);
   }
-
+  const previewButton = document.createElement("button");
+  previewButton.className = "media-preview-button";
+  previewButton.type = "button";
+  previewButton.setAttribute("aria-label", `Open ${item.name}`);
+  previewButton.addEventListener("click", () => openViewer(index, previewButton));
+  previewButton.append(preview);
+  card.append(previewButton);
+  
   return card;
+}
+
+function setVideoSettings(preview) {
+  preview.playsInline = true;
+  preview.autoplay    = true;
+  preview.muted       = true;
+  preview.loop        = true;
+}
+
+function setImageSettings(preview) {
+  preview.loading  = "lazy";
+  preview.decoding = "async";
 }
 
 function makeThumbnail(item, index) {
