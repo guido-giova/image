@@ -84,10 +84,9 @@ h1 {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 20px;
-  margin-bottom: 28px;
   padding: 12px 16px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 16px 16px 0px 0px;
   background: rgb(26 29 35 / 72%);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
@@ -269,10 +268,15 @@ button:disabled {
 }
 
 /* ---------- Gallery ---------- */
+#gallery-container {
+  padding: 20px 10px;
+  background: #333;
+}
+
 .gallery {
   display: grid;
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
-  gap: 18px;
+  gap: 3px;
 }
 
 .media-card {
@@ -280,7 +284,6 @@ button:disabled {
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
   background: var(--surface);
   content-visibility: auto;
   contain-intrinsic-size: auto 260px;
@@ -298,7 +301,7 @@ button:disabled {
 .media-preview {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   background: #0d0f12;
   object-fit: cover;
   transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -315,18 +318,6 @@ video.media-preview {
 /* Keeps the zoomed image inside the rounded frame */
 .media-card {
   isolation: isolate;
-}
-
-.media-name {
-  overflow: hidden;
-  margin: 0;
-  padding: 11px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-soft);
-  font-size: 0.8rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @keyframes card-in {

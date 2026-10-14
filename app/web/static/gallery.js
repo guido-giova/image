@@ -24,12 +24,7 @@ function makeCard(item) {
   }
   preview.src = item.url;
 
-  const caption = document.createElement("p");
-  caption.className = "media-name";
-  caption.textContent = item.path;
-  caption.title = item.path;
-
-  card.append(preview, caption);
+  card.append(preview);
   return card;
 }
 
