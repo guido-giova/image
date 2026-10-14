@@ -8,7 +8,7 @@ from urllib.parse import quote
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 APP_ROOT = PROJECT_ROOT / "app"
@@ -30,11 +30,42 @@ MEDIA_TYPES: dict[str, Literal["image", "video"]] = {
 }
 
 
+class MediaSource(BaseModel):
+    site: str | None = None
+    id: str | int | None = None
+
+
+class MediaMetadata(BaseModel):
+    title: str = ""
+    description: str = ""
+    isFavorite: bool = False
+    downloaded_at: str | None = None
+    width: int | None = None
+    height: int | None = None
+    tags: list[str] = Field(default_factory=list)
+    source: MediaSource | None = None
+
+
 class MediaItem(BaseModel):
     name: str
     path: str
     kind: Literal["image", "video"]
     url: str
+    metadata: MediaMetadata | None = None
+
+
+def load_media_metadata(root: Path, file_path: Path) -> MediaMetadata | None:
+    sidecar_path = file_path.with_suffix(".json")
+    try:
+        resolved_path = sidecar_path.resolve(strict=True)
+        resolved_path.relative_to(root)
+    except (OSError, RuntimeError, ValueError):
+        return None
+
+    if not resolved_path.is_file():
+        return None
+
+    return MediaMetadata.model_validate_json(resolved_path.read_text(encoding="utf-8"))
 
 
 def discover_media(media_root: Path) -> list[MediaItem]:
@@ -63,6 +94,7 @@ def discover_media(media_root: Path) -> list[MediaItem]:
                 path=relative_path,
                 kind=kind,
                 url=f"/media/{quote(relative_path, safe='/')}",
+                metadata=load_media_metadata(root, file_path),
             )
         )
 

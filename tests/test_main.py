@@ -1,4 +1,5 @@
 import asyncio
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -24,6 +25,36 @@ class DiscoverMediaTests(unittest.TestCase):
             [(item.path, item.kind) for item in items],
             [("trips/clip.webm", "video"), ("photo.JPG", "image")],
         )
+        self.assertIsNone(items[0].metadata)
+
+    def test_loads_metadata_from_same_stem_json_sidecar(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "photo.png").write_bytes(b"image")
+            (root / "photo.json").write_text(
+                json.dumps(
+                    {
+                        "title": "A photo",
+                        "description": "Details",
+                        "downloaded_at": "2026-10-12T21:33:56Z",
+                        "tags": ["tag-one", "tag-two"],
+                        "source": {"site": "example.test", "id": "123"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            item = discover_media(root)[0]
+
+        self.assertIsNotNone(item.metadata)
+        self.assertEqual(item.metadata.title, "A photo")
+        self.assertEqual(item.metadata.description, "Details")
+        self.assertFalse(item.metadata.isFavorite)
+        self.assertIsNone(item.metadata.width)
+        self.assertIsNone(item.metadata.height)
+        self.assertEqual(item.metadata.tags, ["tag-one", "tag-two"])
+        self.assertEqual(item.metadata.source.site, "example.test")
+        self.assertEqual(item.metadata.source.id, "123")
 
     def test_resolves_files_only_inside_the_media_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -91,11 +91,27 @@ function renderThumbnails() {
 }
 
 function getViewerDetails(item) {
-  return [
+  const details = [
     { label: "Filename", value: item.name },
-    { label: "Path", value: item.path },
     { label: "Media type", value: item.kind === "video" ? "Video" : "Image" },
   ];
+
+  if (!item.metadata) {
+    return details;
+  }
+
+  const metadata = item.metadata;
+  details.push(
+    { label: "Title", value: metadata.title },
+    { label: "Description", value: metadata.description },
+    { label: "Favorite", value: metadata.isFavorite ? "Yes" : "No" },
+    { label: "Downloaded", value: metadata.downloaded_at ?? "" },
+    { label: "Dimensions", value: `${metadata.width ?? "?"} × ${metadata.height ?? "?"}` },
+    { label: "Tags", value: metadata.tags.join(", ") },
+    { label: "Source site", value: metadata.source?.site ?? "" },
+    { label: "Source ID", value: metadata.source?.id == null ? "" : String(metadata.source.id) },
+  );
+  return details;
 }
 
 function renderViewer(index) {
