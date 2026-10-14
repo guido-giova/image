@@ -1,0 +1,120 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #15171a;
+  color: #f5f5f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top left, rgb(86 98 121 / 14%), transparent 36rem),
+    #15171a;
+}
+
+.page {
+  width: min(100% - 48px, 1440px);
+  margin: 0 auto;
+  padding: 52px 0 72px;
+}
+
+.page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #a5adc0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 650;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.media-count {
+  margin: 0 0 4px;
+  color: #a5adc0;
+  font-size: 0.9rem;
+}
+
+.gallery-status {
+  margin: 0 0 24px;
+  color: #b8bdc7;
+}
+
+.gallery-status[hidden] {
+  display: none;
+}
+
+.gallery-status code {
+  border: 1px solid #363a41;
+  border-radius: 5px;
+  padding: 2px 6px;
+  color: #f5f5f4;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+
+.media-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #30343b;
+  border-radius: 12px;
+  background: #1d2025;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+
+.media-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #101114;
+  object-fit: contain;
+}
+
+.media-name {
+  overflow: hidden;
+  margin: 0;
+  padding: 12px 14px;
+  color: #d2d5db;
+  font-size: 0.83rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .page {
+    width: min(100% - 32px, 1440px);
+    padding-top: 36px;
+  }
+
+  .page-header {
+    align-items: start;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
