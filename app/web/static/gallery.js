@@ -1,3 +1,7 @@
+const GALLERY_MAX_COLUMNS = 10;
+const GALLERY_MIN_COLUMNS = 3;
+const GALLERY_DEFAULT_COLUMNS = 5;
+
 const gallery = document.querySelector("#gallery");
 const statusMessage = document.querySelector("#gallery-status");
 const mediaCount = document.querySelector("#media-count");
@@ -63,19 +67,17 @@ reloadButton.addEventListener("click", () => {
 });
 
 const amountPerRowRange = document.querySelector("#amount-per-row");
+const amountPerRowValue = document.querySelector("#amount-per-row-value");
 
 amountPerRowRange.addEventListener("input", updateGalleryColumns);
 
 function updateGalleryColumns() {
-  if (amountPerRowRange.value > 10) {
-    amountPerRowRange.value = 10;
-  } else if (amountPerRowRange.value < 3) {
-    amountPerRowRange.value = 3;
-  } else if (amountPerRowRange.value === "") {
-    amountPerRowRange.value = 5;
-  }
-
-  gallery.style.gridTemplateColumns = `repeat(${amountPerRowRange.value}, 1fr)`;
+  const parsed = parseInt(amountPerRowRange.value, 10);
+  const columns = Number.isNaN(parsed) ? GALLERY_DEFAULT_COLUMNS : Math.min(GALLERY_MAX_COLUMNS, Math.max(GALLERY_MIN_COLUMNS, parsed));
+  amountPerRowRange.value = columns;
+  
+  gallery.style.setProperty("--columns", columns);
+  amountPerRowValue.textContent = columns;
 }
 
 updateGalleryColumns();

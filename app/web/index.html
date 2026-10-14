@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#15171a">
+    <meta name="theme-color" content="#111317">
     <title>Local Media Gallery</title>
     <link rel="stylesheet" href="/static/gallery.css">
     <script src="/static/gallery.js" defer></script>
@@ -11,22 +11,26 @@
   <body>
     <main class="page">
       <header class="page-header">
-        <div>
-          <h1>Gallery</h1>
-        </div>
+        <h1>Gallery</h1>
         <p id="media-count" class="media-count" aria-live="polite">Loading library…</p>
       </header>
-      <section class="gallery-controls">
-        <label for="amount-per-row">Amount per row</label>
-        <input type="range" id="amount-per-row" name="amount-per-row" min="3" max="10" value="5">
 
-        <label for="search">Search:</label>
-        <input type="text" id="search" name="search" placeholder="Search by filename…">
+      <section class="gallery-controls" aria-label="Gallery controls">
+        <div class="control control-search">
+          <label for="search">Search</label>
+          <input type="text" id="search" name="search" placeholder="Search by filename…">
+        </div>
 
-        <button id="filters-button">Filters</button>
+        <div class="control">
+          <label for="amount-per-row">Per row</label>
+          <input type="range" id="amount-per-row" name="amount-per-row" min="3" max="10" value="5">
+          <output id="amount-per-row-value" class="range-value" for="amount-per-row">5</output>
+        </div>
 
-        <button id="reload-button">Reload</button>
+        <button id="filters-button" type="button">Filters</button>
+        <button id="reload-button" type="button">Reload</button>
       </section>
+
       <section>
         <p id="gallery-status" class="gallery-status" role="status" aria-live="polite">
           Looking for media in <code>_files</code>…
