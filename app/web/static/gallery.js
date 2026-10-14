@@ -58,6 +58,19 @@ const amountPerRowRange = document.querySelector("#amount-per-row");
 
 amountPerRowRange.addEventListener("input", updateGalleryColumns);
 
+function galleryColumnsCookieRestore() {
+  const cookie = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith("amount-per-row="));
+
+  if (cookie) {
+    const value = Number(cookie.split("=")[1]);
+    if (Number.isInteger(value) && value >= 3 && value <= 10) {
+      amountPerRowRange.value = value;
+    }
+  }
+}
+
 function updateGalleryColumns() {
   if (amountPerRowRange.value > 10) {
     amountPerRowRange.value = 10;
@@ -68,7 +81,9 @@ function updateGalleryColumns() {
   }
 
   gallery.style.gridTemplateColumns = `repeat(${amountPerRowRange.value}, 1fr)`;
+  document.cookie = `amount-per-row=${amountPerRowRange.value}; max-age=31536000; path=/; SameSite=Lax`;
 }
 
+galleryColumnsCookieRestore();
 updateGalleryColumns();
 loadGallery();
