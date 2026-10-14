@@ -1,9 +1,11 @@
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
-from app.__main__ import discover_media, resolve_media_path, run_web_app
+from app.__main__ import discover_media, reload_media, resolve_media_path, run_web_app
 
 
 class DiscoverMediaTests(unittest.TestCase):
@@ -34,6 +36,27 @@ class DiscoverMediaTests(unittest.TestCase):
             self.assertEqual(resolve_media_path(root, "photo.png"), root / "photo.png")
             self.assertIsNone(resolve_media_path(root, "../secret.txt"))
             self.assertIsNone(resolve_media_path(root, "missing.png"))
+
+
+class RefreshMediaTests(unittest.TestCase):
+    def test_reload_endpoint_rescans_files_and_updates_media_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "old.png").write_bytes(b"old")
+            application = SimpleNamespace(state=SimpleNamespace())
+            request = SimpleNamespace(app=application)
+
+            with patch("app.__main__.MEDIA_ROOT", root):
+                asyncio.run(reload_media(request))
+            (root / "old.png").unlink()
+            (root / "new.jpg").write_bytes(b"new")
+
+            with patch("app.__main__.MEDIA_ROOT", root):
+                items = asyncio.run(reload_media(request))
+
+        self.assertEqual([item.path for item in items], ["new.jpg"])
+        self.assertEqual(application.state.media_items, items)
+        self.assertEqual(application.state.media_paths, {"new.jpg"})
 
 
 class RunWebAppTests(unittest.TestCase):

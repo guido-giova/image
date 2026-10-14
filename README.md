@@ -16,8 +16,8 @@ python -m app
 ```
 
 The app opens <http://127.0.0.1:8000> in your browser on startup and binds to
-localhost only. Put media files in `_files`; restart the app after adding or
-removing files.
+localhost only. Put media files in `_files`; press **Reload** in the gallery
+after adding or removing files.
 
 Alternatively, run `python main.py` from the project root.
 

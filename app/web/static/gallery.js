@@ -1,6 +1,7 @@
 const gallery = document.querySelector("#gallery");
 const statusMessage = document.querySelector("#gallery-status");
 const mediaCount = document.querySelector("#media-count");
+const reloadButton = document.querySelector("#reload-button");
 
 function makeCard(item) {
   const card = document.createElement("article");
@@ -28,9 +29,10 @@ function makeCard(item) {
   return card;
 }
 
-async function loadGallery() {
+async function loadGallery(url = "/api/media", options) {
+  reloadButton.disabled = true;
   try {
-    const response = await fetch("/api/media");
+    const response = await fetch(url, options);
     if (!response.ok) {
       throw new Error(`Gallery request failed (${response.status})`);
     }
@@ -44,15 +46,21 @@ async function loadGallery() {
     mediaCount.textContent = `${items.length} ${items.length === 1 ? "item" : "items"}`;
     statusMessage.textContent = items.length
       ? ""
-      : "No supported media found. Add images or videos to _files and restart the app.";
+      : "No supported media found. Add images or videos to _files, then reload.";
     statusMessage.hidden = items.length > 0;
   } catch (error) {
     console.error(error);
     mediaCount.textContent = "Library unavailable";
     statusMessage.textContent = "Couldn't load the gallery. Check that the local app is running and try again.";
     statusMessage.hidden = false;
+  } finally {
+    reloadButton.disabled = false;
   }
 }
+
+reloadButton.addEventListener("click", () => {
+  loadGallery("/api/media/reload", { method: "POST" });
+});
 
 const amountPerRowRange = document.querySelector("#amount-per-row");
 

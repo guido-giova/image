@@ -69,6 +69,13 @@ def discover_media(media_root: Path) -> list[MediaItem]:
     return sorted(items, key=lambda item: (item.name.casefold(), item.path.casefold()))
 
 
+def refresh_media(application: FastAPI, media_root: Path) -> list[MediaItem]:
+    items = discover_media(media_root)
+    application.state.media_items = items
+    application.state.media_paths = {item.path for item in items}
+    return items
+
+
 def resolve_media_path(media_root: Path, relative_path: str) -> Path | None:
     if not relative_path or "\\" in relative_path or "\0" in relative_path:
         return None
@@ -95,9 +102,7 @@ def resolve_media_path(media_root: Path, relative_path: str) -> Path | None:
 @asynccontextmanager
 async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
-    items = discover_media(MEDIA_ROOT)
-    application.state.media_items = items
-    application.state.media_paths = {item.path for item in items}
+    refresh_media(application, MEDIA_ROOT)
     yield
 
 
@@ -113,6 +118,11 @@ async def gallery_page() -> FileResponse:
 @app.get("/api/media", response_model=list[MediaItem])
 async def list_media(request: Request) -> list[MediaItem]:
     return request.app.state.media_items
+
+
+@app.post("/api/media/reload", response_model=list[MediaItem])
+async def reload_media(request: Request) -> list[MediaItem]:
+    return refresh_media(request.app, MEDIA_ROOT)
 
 
 @app.get("/media/{relative_path:path}")
