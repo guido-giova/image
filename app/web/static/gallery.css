@@ -340,28 +340,18 @@ video.media-preview {
 }
 
 .viewer {
-  display: grid;
+  display: flex;
   width: 100%;
   height: 100%;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 16px;
+  gap: 20px;
   padding: 20px;
+  flex-direction: column;
 }
 
-.viewer-header {
+.viewer-controls {
   display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.viewer-title {
-  overflow: hidden;
-  margin: 0;
-  font-size: 1.15rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 5px;
+  padding: 0px 0px 15px 0px;
 }
 
 .viewer-close,
@@ -389,7 +379,8 @@ video.media-preview {
   display: grid;
   min-height: 0;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
-  gap: 20px;
+  gap: 15px;
+  flex-grow: 1;
 }
 
 .viewer-stage {
@@ -448,22 +439,20 @@ video.media-preview {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  height: min-content;
 }
 
 .viewer-thumbnails {
   display: flex;
   min-width: 0;
-  gap: 10px;
+  gap: 5px;
   overflow-x: auto;
-  padding: 3px;
   scrollbar-color: #596170 #202329;
 }
 
 .viewer-thumbnail {
   display: grid;
-  flex: 0 0 96px;
-  width: 96px;
-  height: 68px;
+  width: 80px;
   overflow: hidden;
   place-items: center;
   padding: 0;

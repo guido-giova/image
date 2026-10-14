@@ -7,7 +7,6 @@ const statusMessage = document.querySelector("#gallery-status");
 const mediaCount = document.querySelector("#media-count");
 const reloadButton = document.querySelector("#reload-button");
 const mediaDialog = document.querySelector("#media-dialog");
-const viewerTitle = document.querySelector("#viewer-title");
 const viewerStage = document.querySelector("#viewer-stage");
 const viewerData = document.querySelector("#viewer-data");
 const viewerThumbnails = document.querySelector("#viewer-thumbnails");
@@ -97,7 +96,6 @@ function renderViewer(index) {
   }
 
   selectedIndex = index;
-  viewerTitle.textContent = item.name;
 
   const media = document.createElement(item.kind === "video" ? "video" : "img");
   media.className = "viewer-media";
