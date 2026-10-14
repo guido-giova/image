@@ -35,13 +35,7 @@ function makeCard(item, index) {
   } else {
     setImageSettings(preview);
   }
-  const previewButton = document.createElement("button");
-  previewButton.className = "media-preview-button";
-  previewButton.type = "button";
-  previewButton.setAttribute("aria-label", `Open ${item.name}`);
-  previewButton.addEventListener("click", () => openViewer(index, previewButton));
-  previewButton.append(preview);
-  card.append(previewButton);
+  card.append(preview);
   
   return card;
 }
