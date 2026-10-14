@@ -88,6 +88,22 @@ h1 {
   contain-intrinsic-size: auto 260px;
 }
 
+.media-preview-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.media-preview-button:focus-visible,
+.media-name:focus-visible,
+.viewer button:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: -3px;
+}
+
 .media-preview {
   display: block;
   width: 100%;
@@ -97,13 +113,200 @@ h1 {
 }
 
 .media-name {
+  display: block;
+  width: 100%;
   overflow: hidden;
   margin: 0;
   padding: 12px 14px;
+  border: 0;
+  background: transparent;
   color: #d2d5db;
+  font: inherit;
   font-size: 0.83rem;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.media-name:hover {
+  color: #fff;
+}
+
+.media-dialog {
+  width: min(96vw, 1440px);
+  max-width: none;
+  height: min(92dvh, 1000px);
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #414650;
+  border-radius: 14px;
+  background: #1b1e23;
+  color: #f5f5f4;
+}
+
+.media-dialog::backdrop {
+  background: rgb(0 0 0 / 78%);
+  backdrop-filter: blur(4px);
+}
+
+.viewer {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 20px;
+}
+
+.viewer-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.viewer-title {
+  overflow: hidden;
+  margin: 0;
+  font-size: 1.15rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewer-close,
+.carousel-control {
+  display: grid;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #414650;
+  border-radius: 9px;
+  background: #252930;
+  color: #f5f5f4;
+  font: inherit;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.viewer-close:hover,
+.carousel-control:not(:disabled):hover {
+  background: #343a44;
+}
+
+.viewer-content {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 20px;
+}
+
+.viewer-stage {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #30343b;
+  border-radius: 10px;
+  background: #101114;
+}
+
+.viewer-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.viewer-details {
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid #30343b;
+  border-radius: 10px;
+  background: #202329;
+  padding: 18px;
+}
+
+.viewer-data {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+}
+
+.viewer-data dt {
+  margin-bottom: 5px;
+  color: #a5adc0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.viewer-data dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: #e4e6eb;
+  font-size: 0.9rem;
+}
+
+.viewer-carousel {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.viewer-thumbnails {
+  display: flex;
+  min-width: 0;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 3px;
+  scrollbar-color: #596170 #202329;
+}
+
+.viewer-thumbnail {
+  display: grid;
+  flex: 0 0 96px;
+  width: 96px;
+  height: 68px;
+  overflow: hidden;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #414650;
+  border-radius: 8px;
+  background: #101114;
+  cursor: pointer;
+}
+
+.viewer-thumbnail[aria-current="true"] {
+  border-color: #a5b4fc;
+}
+
+.viewer-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-video-label {
+  color: #c8ced8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.carousel-control:disabled {
+  color: #707783;
+  cursor: not-allowed;
 }
 
 @media (max-width: 560px) {
@@ -116,5 +319,48 @@ h1 {
     align-items: start;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .media-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .viewer {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .viewer-content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .viewer-details {
+    max-height: 18dvh;
+    padding: 12px;
+  }
+
+  .viewer-data {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .viewer-data dd {
+    font-size: 0.78rem;
+  }
+
+  .viewer-thumbnail {
+    flex-basis: 76px;
+    width: 76px;
+    height: 56px;
+  }
+
+  .carousel-control {
+    width: 36px;
+    height: 38px;
   }
 }

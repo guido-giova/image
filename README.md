@@ -23,6 +23,9 @@ Alternatively, run `python main.py` from the project root.
 
 The gallery lists all discovered media together. Image previews load lazily, and
 videos use the browser's native controls and load only when played.
+Click an image preview or a media filename to open the viewer. The viewer shows
+the media alongside its filename, path, and type, with a thumbnail carousel for
+navigating the collection. Videos have playback controls in the viewer as well.
 
 Supported formats:
 
