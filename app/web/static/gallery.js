@@ -7,7 +7,6 @@ const statusMessage = document.querySelector("#gallery-status");
 const mediaCount = document.querySelector("#media-count");
 const reloadButton = document.querySelector("#reload-button");
 const mediaDialog = document.querySelector("#media-dialog");
-const viewerTitle = document.querySelector("#viewer-title");
 const viewerStage = document.querySelector("#viewer-stage");
 const viewerData = document.querySelector("#viewer-data");
 const viewerThumbnails = document.querySelector("#viewer-thumbnails");
@@ -21,8 +20,11 @@ let selectedIndex = -1;
 let viewerOpener = null;
 
 function makeCard(item, index) {
-  const card = document.createElement("article");
+  const card = document.createElement("button");
   card.className = "media-card";
+  card.type = "button";
+  card.setAttribute("aria-label", `Open ${item.name}`);
+  card.addEventListener("click", () => openViewer(index, preview));
 
   const preview = document.createElement(item.kind === "video" ? "video" : "img");
   preview.className = "media-preview";
@@ -121,7 +123,6 @@ function renderViewer(index) {
   }
 
   selectedIndex = index;
-  viewerTitle.textContent = item.name;
 
   const media = document.createElement(item.kind === "video" ? "video" : "img");
   media.className = "viewer-media";

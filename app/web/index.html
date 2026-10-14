@@ -40,15 +40,14 @@
     </main>
     <dialog id="media-dialog" class="media-dialog" aria-labelledby="viewer-title">
       <div class="viewer">
-        <header class="viewer-header">
-          <h2 id="viewer-title" class="viewer-title"></h2>
-          <button id="viewer-close" class="viewer-close" type="button" aria-label="Close media viewer">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </header>
         <div class="viewer-content">
           <div id="viewer-stage" class="viewer-stage"></div>
           <aside class="viewer-details" aria-label="Media details">
+            <div class="viewer-controls">
+              <button id="viewer-close" class="viewer-close" type="button" aria-label="Close media viewer">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
             <dl id="viewer-data" class="viewer-data"></dl>
           </aside>
         </div>
