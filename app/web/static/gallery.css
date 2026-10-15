@@ -352,27 +352,39 @@ video.media-preview {
   display: flex;
   gap: 5px;
   padding: 0px 0px 15px 0px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
 }
 
-.viewer-close,
-.carousel-control {
-  display: grid;
-  flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid #414650;
+.viewer-control {
   border-radius: 9px;
-  background: #252930;
-  color: #f5f5f4;
-  font: inherit;
-  font-size: 1.5rem;
-  cursor: pointer;
+  padding: 6px;
 }
 
-.viewer-close:hover,
-.carousel-control:not(:disabled):hover {
-  background: #343a44;
+.viewer-control img, .carousel-control img {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+#viewer-delete {
+  background-color: red;
+}
+
+#viewer-favorite {
+  background-color: yellow;
+}
+
+#viewer-save {
+  background-color: green;
+}
+
+#viewer-close {
+  background-color: orange;
+}
+
+.carousel-control {
+  background-color: blueviolet;
 }
 
 .viewer-content {

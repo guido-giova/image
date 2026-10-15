@@ -140,6 +140,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(title="Local Media Gallery", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_ROOT), name="static")
+app.mount("/resources", StaticFiles(directory=APP_ROOT / "resources"), name="resources")
 
 
 @app.get("/", response_class=FileResponse)

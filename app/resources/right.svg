@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="-1 -11 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+        stroke="#ffffff"
+        stroke-width="2px"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M 2.5 0 l 5 -5 l -5 -5"
+    />
+</svg>
