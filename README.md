@@ -3,10 +3,8 @@
 Browse a private image and video collection locally. The app reads media from
 `_files` (including nested folders) and does not upload files. The viewer can
 toggle each media file's favorite value in its JSON sidecar, or move it to
-`_files/.deleted`. Deleted files are retained for 30 days and then permanently
-removed within a minute while the app is running, or at startup if already
-expired.
-It has no external service or frontend dependency.
+`_files/.deleted`. Deleted files are retained for 30 days and then permanently removed within a
+minute while the app is running, or at startup if already expired.
 
 ## Run locally
 
@@ -25,8 +23,17 @@ after adding or removing files.
 
 Alternatively, run `python main.py` from the project root.
 
-The gallery lists all discovered media together. Image previews load lazily, and
-videos use the browser's native controls and load only when played.
+On startup and when **Reload** is pressed, the app creates cached previews under
+`_files/.thumbnails`. Images are resized to at most 480 pixels on the long edge
+and saved as JPEG at quality 75. Videos get a still image and a silent H.264
+preview capped at 854×480; unchanged source files reuse their cached previews.
+Video previews autoplay muted and loop in the gallery when supported, with the
+still image as their poster. Full-resolution media remains available in the
+viewer. Generated thumbnail files are excluded from the media library and
+removed when their source media is deleted or removed during Reload.
+
+The gallery lists all discovered media together. Image previews load lazily,
+and videos use the browser's native controls in the viewer.
 Click an image preview or a media filename to open the viewer. The viewer shows
 the media alongside its filename, path, and type, with a thumbnail carousel for
 navigating the collection. Videos have playback controls in the viewer as well.
@@ -40,3 +47,7 @@ Supported formats:
 
 - Images: `.avif`, `.gif`, `.jpeg`, `.jpg`, `.png`, `.webp`
 - Videos: `.mp4`, `.ogv`, `.ogg`, `.webm`
+
+Pillow and `imageio-ffmpeg` are installed from `requirements.txt`; the latter
+provides FFmpeg for video thumbnail generation without a separate system
+installation.

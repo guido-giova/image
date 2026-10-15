@@ -7,6 +7,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from fastapi import HTTPException
+from PIL import Image
+
 from app.__main__ import (
     MediaPathRequest,
     discover_media,
@@ -14,6 +17,7 @@ from app.__main__ import (
     reload_media,
     resolve_media_path,
     run_web_app,
+    serve_thumbnail,
     soft_delete_media,
     toggle_favorite,
 )
@@ -73,10 +77,54 @@ class DiscoverMediaTests(unittest.TestCase):
             deleted = root / ".deleted" / "deletion-id"
             deleted.mkdir(parents=True)
             (deleted / "hidden.png").write_bytes(b"hidden")
+            thumbnails = root / ".thumbnails"
+            thumbnails.mkdir()
+            (thumbnails / "generated.jpg").write_bytes(b"thumbnail")
 
             items = discover_media(root)
 
         self.assertEqual([item.path for item in items], ["visible.png"])
+
+
+class ThumbnailServingTests(unittest.TestCase):
+    def test_serves_still_preview_only_for_indexed_media(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "photo.png"
+            source.write_bytes(b"image")
+            thumbnail = root / ".thumbnails" / "photo.png.jpg"
+            thumbnail.parent.mkdir()
+            thumbnail.write_bytes(b"thumbnail")
+            item = discover_media(root)[0]
+            application = SimpleNamespace(
+                state=SimpleNamespace(media_items=[item], media_paths={item.path})
+            )
+            request = SimpleNamespace(app=application)
+
+            with patch("app.__main__.MEDIA_ROOT", root):
+                response = asyncio.run(serve_thumbnail(item.path, "still", request))
+
+            self.assertEqual(Path(response.path), thumbnail)
+
+    def test_does_not_serve_thumbnail_for_unindexed_media_or_wrong_variant(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "photo.png"
+            source.write_bytes(b"image")
+            item = discover_media(root)[0]
+            application = SimpleNamespace(
+                state=SimpleNamespace(media_items=[item], media_paths={item.path})
+            )
+            request = SimpleNamespace(app=application)
+
+            with patch("app.__main__.MEDIA_ROOT", root):
+                with self.assertRaises(HTTPException) as wrong_variant:
+                    asyncio.run(serve_thumbnail(item.path, "video", request))
+                with self.assertRaises(HTTPException) as unknown:
+                    asyncio.run(serve_thumbnail("other.png", "still", request))
+
+            self.assertEqual(wrong_variant.exception.status_code, 404)
+            self.assertEqual(unknown.exception.status_code, 404)
 
     def test_resolves_files_only_inside_the_media_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -95,21 +143,60 @@ class RefreshMediaTests(unittest.TestCase):
     def test_reload_endpoint_rescans_files_and_updates_media_paths(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "old.png").write_bytes(b"old")
+            Image.new("RGB", (4, 4), "blue").save(root / "old.png")
             application = SimpleNamespace(state=SimpleNamespace())
             request = SimpleNamespace(app=application)
 
             with patch("app.__main__.MEDIA_ROOT", root):
-                asyncio.run(reload_media(request))
+                first_items = asyncio.run(reload_media(request))
+            self.assertEqual(
+                first_items[0].thumbnail_url,
+                "/thumbnail/old.png?variant=still",
+            )
+            self.assertTrue((root / ".thumbnails" / "old.png.jpg").is_file())
+
             (root / "old.png").unlink()
-            (root / "new.jpg").write_bytes(b"new")
+            Image.new("RGB", (4, 4), "red").save(root / "new.jpg")
 
             with patch("app.__main__.MEDIA_ROOT", root):
                 items = asyncio.run(reload_media(request))
 
-        self.assertEqual([item.path for item in items], ["new.jpg"])
+            self.assertEqual([item.path for item in items], ["new.jpg"])
+            self.assertEqual(items[0].thumbnail_url, "/thumbnail/new.jpg?variant=still")
+            self.assertFalse((root / ".thumbnails" / "old.png.jpg").exists())
+            self.assertTrue((root / ".thumbnails" / "new.jpg.jpg").is_file())
+
         self.assertEqual(application.state.media_items, items)
         self.assertEqual(application.state.media_paths, {"new.jpg"})
+
+    def test_reload_publishes_and_serves_video_preview(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "clip.webm"
+            source.write_bytes(b"video")
+            still = root / ".thumbnails" / "clip.webm.jpg"
+            preview = root / ".thumbnails" / "clip.webm.mp4"
+            still.parent.mkdir()
+            still.write_bytes(b"still")
+            preview.write_bytes(b"preview")
+            application = SimpleNamespace(state=SimpleNamespace())
+            request = SimpleNamespace(app=application)
+
+            with (
+                patch("app.__main__.MEDIA_ROOT", root),
+                patch(
+                    "app.__main__.generate_thumbnail_assets",
+                    return_value=(still, preview),
+                ),
+            ):
+                items = asyncio.run(reload_media(request))
+                response = asyncio.run(
+                    serve_thumbnail(items[0].path, "video", request)
+                )
+
+            self.assertEqual(items[0].thumbnail_url, "/thumbnail/clip.webm?variant=still")
+            self.assertEqual(items[0].preview_url, "/thumbnail/clip.webm?variant=video")
+            self.assertEqual(Path(response.path), preview)
 
 
 class MediaMutationTests(unittest.TestCase):

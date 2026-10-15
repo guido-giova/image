@@ -28,13 +28,19 @@ function makeCard(item, index) {
   card.setAttribute("aria-label", `Open ${item.name}`);
   card.addEventListener("click", () => openViewer(index, preview));
 
-  const preview = document.createElement(item.kind === "video" ? "video" : "img");
+  const hasPreviewVideo = item.kind === "video" && item.preview_url;
+  const showVideo = item.kind === "video" && (hasPreviewVideo || !item.thumbnail_url);
+  const preview = document.createElement(showVideo ? "video" : "img");
   preview.className = "media-preview";
-  preview.src = item.url;
 
-  if (item.kind === "video") {
+  if (showVideo) {
+    preview.src = item.preview_url || item.url;
+    if (item.thumbnail_url) {
+      preview.poster = item.thumbnail_url;
+    }
     setVideoSettings(preview);
   } else {
+    preview.src = item.thumbnail_url || item.url;
     setImageSettings(preview);
   }
   card.append(preview);
@@ -61,9 +67,9 @@ function makeThumbnail(item, index) {
   button.setAttribute("aria-label", `Show ${item.name}`);
   button.addEventListener("click", () => selectMedia(index));
 
-  if (item.kind === "image") {
+  if (item.thumbnail_url || item.kind === "image") {
     const image = document.createElement("img");
-    image.src = item.url;
+    image.src = item.thumbnail_url || item.url;
     image.alt = "";
     image.loading = "lazy";
     image.decoding = "async";

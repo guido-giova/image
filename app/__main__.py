@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import logging
 import shutil
+import subprocess
 from pathlib import Path, PurePosixPath
 import tempfile
 from typing import AsyncGenerator, Literal
@@ -16,6 +17,12 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ValidationError
+from app.storage.thumbnail import (
+    generate_thumbnail_assets,
+    get_thumbnail_path,
+    prune_thumbnail_cache,
+    remove_thumbnail_assets,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 APP_ROOT = PROJECT_ROOT / "app"
@@ -62,6 +69,8 @@ class MediaItem(BaseModel):
     path: str
     kind: Literal["image", "video"]
     url: str
+    thumbnail_url: str | None = None
+    preview_url: str | None = None
     metadata: MediaMetadata | None = None
 
 
@@ -105,7 +114,7 @@ def discover_media(media_root: Path) -> list[MediaItem]:
         except ValueError:
             continue
 
-        if PurePosixPath(relative_path).parts[0] == ".deleted":
+        if PurePosixPath(relative_path).parts[0] in {".deleted", ".thumbnails"}:
             continue
 
         kind = MEDIA_TYPES.get(file_path.suffix.lower())
@@ -126,7 +135,44 @@ def discover_media(media_root: Path) -> list[MediaItem]:
 
 
 def refresh_media(application: FastAPI, media_root: Path) -> list[MediaItem]:
-    items = discover_media(media_root)
+    items: list[MediaItem] = []
+    media_kinds: dict[str, Literal["image", "video"]] = {}
+    for item in discover_media(media_root):
+        media_kinds[item.path] = item.kind
+        try:
+            still_path, video_path = generate_thumbnail_assets(
+                media_root,
+                item.path,
+                item.kind,
+            )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError):
+            logger.exception("Unable to create thumbnails for %s", item.path)
+            still_path = None
+            video_path = None
+
+        encoded_path = quote(item.path, safe="/")
+        items.append(
+            item.model_copy(
+                update={
+                    "thumbnail_url": (
+                        f"/thumbnail/{encoded_path}?variant=still"
+                        if still_path is not None and still_path.is_file()
+                        else None
+                    ),
+                    "preview_url": (
+                        f"/thumbnail/{encoded_path}?variant=video"
+                        if video_path is not None and video_path.is_file()
+                        else None
+                    ),
+                }
+            )
+        )
+
+    try:
+        prune_thumbnail_cache(media_root, media_kinds)
+    except (OSError, RuntimeError, ValueError):
+        logger.exception("Unable to prune the thumbnail cache")
+
     application.state.media_items = items
     application.state.media_paths = {item.path for item in items}
     return items
@@ -370,6 +416,10 @@ async def soft_delete_media(payload: MediaPathRequest, request: Request) -> Dele
         item for item in request.app.state.media_items if item.path != payload.path
     ]
     request.app.state.media_paths.discard(payload.path)
+    try:
+        remove_thumbnail_assets(MEDIA_ROOT, payload.path)
+    except (OSError, RuntimeError, ValueError):
+        logger.exception("Unable to remove thumbnails for deleted media %s", payload.path)
     return DeleteResult(path=payload.path, expiresAt=deleted_at + DELETED_RETENTION)
 
 
@@ -383,6 +433,31 @@ async def serve_media(relative_path: str, request: Request) -> FileResponse:
         raise HTTPException(status_code=404, detail="Media file not found")
 
     return FileResponse(media_path)
+
+
+@app.get("/thumbnail/{relative_path:path}")
+async def serve_thumbnail(
+    relative_path: str,
+    variant: Literal["still", "video"],
+    request: Request,
+) -> FileResponse:
+    if relative_path not in request.app.state.media_paths:
+        raise HTTPException(status_code=404, detail="Media file not found")
+
+    media_item = next(
+        item for item in request.app.state.media_items if item.path == relative_path
+    )
+    if variant == "video" and media_item.kind != "video":
+        raise HTTPException(status_code=404, detail="Video preview not found")
+
+    try:
+        thumbnail_path = get_thumbnail_path(MEDIA_ROOT, relative_path, variant)
+    except (FileNotFoundError, OSError, RuntimeError, ValueError) as error:
+        raise HTTPException(status_code=404, detail="Thumbnail not found") from error
+    if not thumbnail_path.is_file():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+
+    return FileResponse(thumbnail_path)
 
 
 def run_web_app(host: str = "127.0.0.1", port: int = 8000, open_browser: bool = True) -> None:
