@@ -13,6 +13,8 @@ const viewerThumbnails = document.querySelector("#viewer-thumbnails");
 const viewerClose = document.querySelector("#viewer-close");
 const viewerPrevious = document.querySelector("#viewer-previous");
 const viewerNext = document.querySelector("#viewer-next");
+const viewerDelete = document.querySelector("#viewer-delete");
+const viewerFavorite = document.querySelector("#viewer-favorite");
 
 let mediaItems = [];
 let thumbnailButtons = [];
@@ -117,6 +119,12 @@ function renderViewer(index) {
   }
 
   selectedIndex = index;
+  const isFavorite = item.metadata?.isFavorite ?? false;
+  viewerFavorite.setAttribute("aria-pressed", String(isFavorite));
+  viewerFavorite.setAttribute(
+    "aria-label",
+    isFavorite ? "Remove from favorites" : "Add to favorites",
+  );
 
   const media = document.createElement(item.kind === "video" ? "video" : "img");
   media.className = "viewer-media";
@@ -178,6 +186,104 @@ function closeViewer() {
   }
 }
 
+async function readErrorMessage(response) {
+  try {
+    const body = await response.json();
+    if (typeof body.detail === "string") {
+      return body.detail;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return `Request failed (${response.status})`;
+}
+
+async function toggleFavorite() {
+  const item = mediaItems[selectedIndex];
+  if (!item) {
+    return;
+  }
+
+  viewerFavorite.disabled = true;
+  try {
+    const response = await fetch("/api/media/favorite", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: item.path }),
+    });
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response));
+    }
+
+    const updatedItem = await response.json();
+    const updatedIndex = mediaItems.findIndex(
+      (mediaItem) => mediaItem.path === updatedItem.path,
+    );
+    if (updatedIndex !== -1) {
+      mediaItems[updatedIndex] = updatedItem;
+      if (mediaItems[selectedIndex]?.path === updatedItem.path) {
+        renderViewer(selectedIndex);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    window.alert(`Couldn't update favorite: ${error.message}`);
+  } finally {
+    viewerFavorite.disabled = false;
+  }
+}
+
+async function deleteCurrentMedia() {
+  const item = mediaItems[selectedIndex];
+  if (!item) {
+    return;
+  }
+
+  viewerDelete.disabled = true;
+  try {
+    const response = await fetch("/api/media/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: item.path }),
+    });
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response));
+    }
+
+    const deletedPath = (await response.json()).path;
+    const deletedIndex = mediaItems.findIndex(
+      (mediaItem) => mediaItem.path === deletedPath,
+    );
+    if (deletedIndex === -1) {
+      return;
+    }
+
+    const selectedPath = mediaItems[selectedIndex]?.path;
+    mediaItems.splice(deletedIndex, 1);
+    renderGallery();
+    if (mediaItems.length === 0) {
+      closeViewer();
+      return;
+    }
+
+    const remainingSelectedIndex = mediaItems.findIndex(
+      (mediaItem) => mediaItem.path === selectedPath,
+    );
+    selectMedia(
+      remainingSelectedIndex === -1
+        ? Math.min(deletedIndex, mediaItems.length - 1)
+        : remainingSelectedIndex,
+    );
+  } catch (error) {
+    console.error(error);
+    window.alert(`Couldn't delete file: ${error.message}`);
+  } finally {
+    viewerDelete.disabled = false;
+  }
+}
+
+viewerFavorite.addEventListener("click", toggleFavorite);
+viewerDelete.addEventListener("click", deleteCurrentMedia);
 viewerClose.addEventListener("click", closeViewer);
 viewerPrevious.addEventListener("click", () => selectMedia(selectedIndex - 1));
 viewerNext.addEventListener("click", () => selectMedia(selectedIndex + 1));
@@ -230,17 +336,7 @@ async function loadGallery(url = "/api/media", options) {
     }
 
     mediaItems = await response.json();
-    const fragment = document.createDocumentFragment();
-    mediaItems.forEach((item, index) => {
-      fragment.append(makeCard(item, index));
-    });
-    gallery.replaceChildren(fragment);
-    renderThumbnails();
-    mediaCount.textContent = `${mediaItems.length} ${mediaItems.length === 1 ? "item" : "items"}`;
-    statusMessage.textContent = mediaItems.length
-      ? ""
-      : "No supported media found. Add images or videos to _files, then reload.";
-    statusMessage.hidden = mediaItems.length > 0;
+    renderGallery();
   } catch (error) {
     console.error(error);
     mediaCount.textContent = "Library unavailable";
@@ -249,6 +345,20 @@ async function loadGallery(url = "/api/media", options) {
   } finally {
     reloadButton.disabled = false;
   }
+}
+
+function renderGallery() {
+  const fragment = document.createDocumentFragment();
+  mediaItems.forEach((item, index) => {
+    fragment.append(makeCard(item, index));
+  });
+  gallery.replaceChildren(fragment);
+  renderThumbnails();
+  mediaCount.textContent = `${mediaItems.length} ${mediaItems.length === 1 ? "item" : "items"}`;
+  statusMessage.textContent = mediaItems.length
+    ? ""
+    : "No supported media found. Add images or videos to _files, then reload.";
+  statusMessage.hidden = mediaItems.length > 0;
 }
 
 reloadButton.addEventListener("click", () => {

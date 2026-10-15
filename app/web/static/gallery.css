@@ -354,6 +354,23 @@ video.media-preview {
   padding: 0px 0px 15px 0px;
 }
 
+.viewer-control {
+  flex: 0 0 auto;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 10px;
+}
+
+.viewer-control[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgb(138 180 255 / 18%);
+  color: var(--accent);
+}
+
+#viewer-delete {
+  color: #ff9a9a;
+}
+
 .viewer-close,
 .carousel-control {
   display: grid;
